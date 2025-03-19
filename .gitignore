@@ -42,6 +42,9 @@
 *.idb
 *.pdb
 
+# Flex generated files
+*.yy.c
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
