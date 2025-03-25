@@ -1,11 +1,11 @@
 %{
 #include <stdio.h>
 #include "tokens.h"
-
-int lines = 1;
 %}
 
 %option noyywrap
+%option yylineno
+
 
 %%
 as {return TK_PR_AS;}
@@ -49,11 +49,12 @@ with {return TK_PR_WITH;}
 
 \/\/.*
 
-[\n\t] ++lines;
+
+[\n\t\r ] ;
 
 . return TK_ER;
 %%
 
 int get_line_number(void){
-    return lines;
+    return yylineno;
 }
