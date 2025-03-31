@@ -29,6 +29,7 @@
 *.dylib
 
 # Executables
+etapa*
 *.exe
 *.out
 *.app
@@ -44,6 +45,11 @@
 
 # Flex generated files
 *.yy.c
+*.yy.h
+
+# Bison generated files
+*.tab.c
+*.tab.h
 
 # Kernel Module Compile Results
 *.mod*
