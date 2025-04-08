@@ -53,3 +53,4 @@ coverage: all $(TEST_FILES)
 
 clean:
 	rm -f $(TARGET) $(OBJS) $(LEX_OUTPUT) $(PARSER_OUTPUT)
+	lcov --directory . --zerocounters
