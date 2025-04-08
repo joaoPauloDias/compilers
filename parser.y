@@ -119,9 +119,9 @@ n2:
     n1;
 
 n1:
-    '+' n0 |
-    '-' n0 |
-    '!' n0 |
+    '+' n1 |
+    '-' n1 |
+    '!' n1 |
     n0;
 
 n0: func_call | TK_ID | TK_LI_FLOAT | TK_LI_INT | '(' expression ')';

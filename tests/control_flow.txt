@@ -7,6 +7,6 @@ main returns int is [
     if (1 * 2 / 3 % 4) []
     if (+1 | -2 | !255) []
     if (foo() | bar | 69 | 420.0 | (biz)) []
-    if (--bar) [] else []
+    if (----bar) [] else []
     while (!foo) []
 ];
