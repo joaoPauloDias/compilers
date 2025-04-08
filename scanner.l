@@ -6,7 +6,6 @@
 %option noyywrap
 %option yylineno
 
-
 %%
 as {return TK_PR_AS;}
 declare {return TK_PR_DECLARE;}
@@ -48,7 +47,6 @@ with {return TK_PR_WITH;}
 [0-9]+ {return TK_LI_INT;}
 
 \/\/.*
-
 
 [\n\t\r ] ;
 

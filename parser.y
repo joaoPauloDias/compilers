@@ -1,8 +1,10 @@
 %{
+
 #include <stdio.h>
 int yylex(void);
 void yyerror (char const *mensagem);
 int get_line_number(void);
+
 %}
 
 %token TK_PR_AS
@@ -29,35 +31,103 @@ int get_line_number(void);
 
 %%
 
-programa: lista ';';
-programa: ;
+program: /* empty */ | list ';' ;
 
-lista: elemento;
-lista: lista ',' elemento;
+list:
+    element |
+    list ',' element;
 
-elemento: def_func;
-elemento: decl_var;
+element: func_def | decl_var;
 
-def_func: ;
+types: TK_PR_FLOAT | TK_PR_INT;
 
-decl_var: ;
+param: TK_ID TK_PR_AS types;
 
-atribuicao: TK_ID TK_PR_IS expressao;
+params_list_:
+    param |
+    params_list_ ',' param;
 
-expressao: n7;
+params_list: TK_PR_WITH params_list_;
 
-n7: n7 '|' n6;
-n7: n6;
+func_def: 
+    TK_ID TK_PR_RETURNS types TK_PR_IS command_block|
+    TK_ID TK_PR_RETURNS types params_list TK_PR_IS command_block;
 
-n6: n6 '&' n5;
-n6: n5;
+simple_commands: command_block | decl_var | attribution | func_call | return | conditional | while;
 
-n5: ;
+command_seq:
+    simple_commands |
+    command_seq simple_commands;
+
+command_block:
+    '[' ']' |
+    '[' command_seq ']';
+
+literals: TK_LI_FLOAT | TK_LI_INT;
+
+decl_var:
+    TK_PR_DECLARE TK_ID TK_PR_AS types |
+    TK_PR_DECLARE TK_ID TK_PR_AS types TK_PR_WITH literals;
+
+attribution: TK_ID TK_PR_IS expression;
+
+func_call:
+    TK_ID '(' expression_list ')';
+
+expression_list:
+    /* empty */ |
+    expression |
+    expression_list ',' expression;
+
+return: TK_PR_RETURN expression TK_PR_AS types;
+
+conditional: TK_PR_IF '(' expression ')' command_block else;
+
+else:
+    /* empty */ |
+    TK_PR_ELSE command_block;
+
+while: TK_PR_WHILE '(' expression ')' command_block;
+
+expression: n7;
+
+n7: n7 '|' n6 | n6;
+
+n6: n6 '&' n5 | n5;
+
+n5:
+    n5 TK_OC_EQ n4 |
+    n5 TK_OC_NE n4 |
+    n4;
+
+n4:
+    n4 '<' n3 |
+    n4 '>' n3 |
+    n4 TK_OC_LE n3 |
+    n4 TK_OC_GE n3 |
+    n3;
+
+n3:
+    n3 '+' n2 |
+    n3 '-' n2 |
+    n2;
+
+n2:
+    n2 '*' n1 |
+    n2 '/' n1 |
+    n2 '%' n1 |
+    n1;
+
+n1:
+    '+' n0 |
+    '-' n0 |
+    '!' n0;
+
+n0: func_call | TK_ID | TK_LI_FLOAT | TK_LI_INT | '(' expression ')';
 
 %%
 
-
 void yyerror(const char* mensagem)
 {
-    printf("Na linhda %d, houve o erro \"%s\"\n", get_line_number(), mensagem);
+    printf("Na linha %d, houve o erro \"%s\"\n", get_line_number(), mensagem);
 }
