@@ -49,11 +49,11 @@ params_list_:
 
 params_list: TK_PR_WITH params_list_;
 
-func_def: 
-    TK_ID TK_PR_RETURNS types TK_PR_IS command_block|
+func_def:
+    TK_ID TK_PR_RETURNS types TK_PR_IS command_block |
     TK_ID TK_PR_RETURNS types params_list TK_PR_IS command_block;
 
-simple_commands: command_block | decl_var | attribution | func_call | return | conditional | while;
+simple_commands: command_block | decl_var | decl_var_with_value | attribution | func_call | return | conditional | while;
 
 command_seq:
     simple_commands |
@@ -65,9 +65,9 @@ command_block:
 
 literals: TK_LI_FLOAT | TK_LI_INT;
 
-decl_var:
-    TK_PR_DECLARE TK_ID TK_PR_AS types |
-    TK_PR_DECLARE TK_ID TK_PR_AS types TK_PR_WITH literals;
+decl_var: TK_PR_DECLARE TK_ID TK_PR_AS types;
+
+decl_var_with_value: TK_PR_DECLARE TK_ID TK_PR_AS types TK_PR_WITH literals;
 
 attribution: TK_ID TK_PR_IS expression;
 
@@ -121,7 +121,8 @@ n2:
 n1:
     '+' n0 |
     '-' n0 |
-    '!' n0;
+    '!' n0 |
+    n0;
 
 n0: func_call | TK_ID | TK_LI_FLOAT | TK_LI_INT | '(' expression ')';
 

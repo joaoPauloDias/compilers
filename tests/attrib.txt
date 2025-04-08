@@ -1,0 +1,4 @@
+main returns int is [
+    declare foo as int
+    foo is 69
+];

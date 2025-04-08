@@ -1,8 +1,0 @@
-declare foo as float with 420.69,
-declare bar as int with 666,
-if (1>2) [],
-if (1<2) [],
-if (1<=2) [],
-if (1>=2) [],
-if (1==2) [],
-if (1!=2) [];
