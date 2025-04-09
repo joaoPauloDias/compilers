@@ -43,7 +43,7 @@ with {return TK_PR_WITH;}
 \| return '|';
 
 [a-z_][a-z_0-9]* {return TK_ID;}
-[0-9]+\.[0-9]+ {return TK_LI_FLOAT;}
+[0-9]*\.[0-9]+ {return TK_LI_FLOAT;}
 [0-9]+ {return TK_LI_INT;}
 
 \/\/.*

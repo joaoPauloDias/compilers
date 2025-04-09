@@ -52,5 +52,6 @@ coverage: all $(TEST_FILES)
 .PHONY: clean
 
 clean:
-	rm -f $(TARGET) $(OBJS) $(LEX_OUTPUT) $(PARSER_OUTPUT)
+	rm -f $(TARGET) $(OBJS) $(LEX_OUTPUT) $(PARSER_OUTPUT) *.gv *.info
 	lcov --directory . --zerocounters
+	rm -rf coverage_report
