@@ -12,7 +12,7 @@ endif
 TARGET = etapa2
 LEX_OUTPUT = lex.yy.c lex.yy.h
 PARSER_OUTPUT = parser.tab.c parser.tab.h
-OBJS = parser.tab.o lex.yy.o main.o
+OBJS = parser.tab.o lex.yy.o main.o asd.o
 
 TEST_FILES := $(wildcard tests/*.txt)
 

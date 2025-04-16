@@ -42,7 +42,17 @@ with {return TK_PR_WITH;}
 \& return '&';
 \| return '|';
 
-[a-z_][a-z_0-9]* {return TK_ID;}
+[a-z_][a-z_0-9]* {
+    value_t* aux = (value_t*) malloc(sizeof(value_t));
+    if (aux == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    aux->lexem = strdup(yytext);
+    yylval.lexical_value = aux;
+    
+    return TK_ID;
+}
+
 [0-9]*\.[0-9]+ {return TK_LI_FLOAT;}
 [0-9]+ {return TK_LI_INT;}
 
