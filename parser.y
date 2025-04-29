@@ -7,18 +7,24 @@ int yylex(void);
 void yyerror (char const *mensagem);
 int get_line_number(void);
 
-extern asd_tree_t *arvore;
+extern AsdTree *arvore;
+
+enum TokenKind {
+    TKLiteral,
+    TKIdentifier,
+}
 
 typedef struct {
+    uint32_t line_number;
+    TokenKind kind;
     char* lexem;
-    size_t line_number;
-} value_t;
+} LexicalValue;
 
 %}
 
 %union {
-    asd_tree_t *node;
-    value_t *lexical_value;
+    AsdTree *node;
+    LexicalValue *lexical_value;
 }
 
 %token TK_PR_AS
@@ -146,7 +152,7 @@ n3:
 n2:
     n2 '*' n1 |
     n2 '/' n1 |
-    n2 '%' n1 { $$ = asd_new($2); asd_add_child($$, $1); asd_add_child($$, $3); } |
+    n2 '%' n1 { $$ = asd_new($2); $$[0] = $1; $$[1] = $3; } |
     n1 { $$ = $1 };
 
 n1:
@@ -157,8 +163,8 @@ n1:
 
 n0: func_call |
     TK_ID { $$ = asd_new($1->lexem); free($1->lexem); free($1); } |
-    TK_LI_FLOAT | 
-    TK_LI_INT | 
+    TK_LI_FLOAT { $$ = asd_new($1->lexem); free($1->lexem); free($1); } | 
+    TK_LI_INT { $$ = asd_new($1->lexem); free($1->lexem); free($1); } | 
     '(' expression ')';
 
 %%

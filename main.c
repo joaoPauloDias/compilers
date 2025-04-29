@@ -7,7 +7,7 @@
 extern int yyparse(void);
 extern int yylex_destroy(void);
 
-asd_tree_t *arvore = NULL;
+AsdTree *arvore = NULL;
 
 int main(int argc, char **argv)
 {

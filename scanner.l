@@ -43,7 +43,7 @@ with {return TK_PR_WITH;}
 \| return '|';
 
 [a-z_][a-z_0-9]* {
-    value_t* aux = (value_t*) malloc(sizeof(value_t));
+    LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
     if (aux == NULL) {
         exit(EXIT_FAILURE);
     }
@@ -53,8 +53,27 @@ with {return TK_PR_WITH;}
     return TK_ID;
 }
 
-[0-9]*\.[0-9]+ {return TK_LI_FLOAT;}
-[0-9]+ {return TK_LI_INT;}
+[0-9]*\.[0-9]+ {
+    LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
+    if (aux == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    aux->lexem = strdup(yytext);
+    yylval.lexical_value = aux;
+    
+    return TK_ID;
+}
+
+[0-9]+ {
+    LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
+    if (aux == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    aux->lexem = strdup(yytext);
+    yylval.lexical_value = aux;
+    
+    return TK_ID;
+}
 
 \/\/.*
 

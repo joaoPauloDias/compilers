@@ -1,22 +1,32 @@
 #include "asd.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-asd_tree_t *asd_new(const char *label)
+AsdTree *asd_new(const char *label)
 {
-    asd_tree_t *ret = NULL;
-    ret = malloc(sizeof(asd_tree_t));
-    if (ret != NULL)
-    {
-        ret->label = strdup(label);
-        ret->number_of_children = 0;
-        ret->children = NULL;
-    }
+    AsdTree *ret = malloc(sizeof(AsdTree));
+    assert(ret != NULL);
+
+    ret->label = strdup(label);
+    ret->number_of_children = 0;
+    ret->children = NULL;
+
     return ret;
 }
 
-void asd_free(asd_tree_t *tree)
+AsdTree *asd_with_capacity(const char *label, uint16_t capacity)
+{
+    AsdTree *ret = asd_new(label);
+
+    ret->children = malloc(capacity);
+    ret->number_of_children = capacity;
+
+    return ret;
+}
+
+void asd_free(AsdTree *tree)
 {
     if (tree != NULL)
     {
@@ -35,12 +45,12 @@ void asd_free(asd_tree_t *tree)
     }
 }
 
-void asd_add_child(asd_tree_t *tree, asd_tree_t *child)
+void asd_add_child(AsdTree *tree, AsdTree *child)
 {
     if (tree != NULL && child != NULL)
     {
         tree->number_of_children++;
-        tree->children = realloc(tree->children, tree->number_of_children * sizeof(asd_tree_t *));
+        tree->children = realloc(tree->children, tree->number_of_children * sizeof(AsdTree *));
         tree->children[tree->number_of_children - 1] = child;
     }
     else
@@ -49,12 +59,12 @@ void asd_add_child(asd_tree_t *tree, asd_tree_t *child)
     }
 }
 
-static void _asd_print(FILE *foutput, asd_tree_t *tree, int profundidade)
+static void _asd_print(FILE *foutput, AsdTree *tree, int profundidade)
 {
     int i;
     if (tree != NULL)
     {
-        fprintf(foutput, "%d%*s: Nó '%s' tem %d filhos:\n", profundidade, profundidade * 2, "", tree->label,
+        fprintf(foutput, "%d%*s: Nó '%s' tem %hu filhos:\n", profundidade, profundidade * 2, "", tree->label,
                 tree->number_of_children);
         for (i = 0; i < tree->number_of_children; i++)
         {
@@ -67,7 +77,7 @@ static void _asd_print(FILE *foutput, asd_tree_t *tree, int profundidade)
     }
 }
 
-void asd_print(asd_tree_t *tree)
+void asd_print(AsdTree *tree)
 {
     FILE *foutput = stderr;
     if (tree != NULL)
@@ -80,7 +90,7 @@ void asd_print(asd_tree_t *tree)
     }
 }
 
-static void _asd_print_graphviz(FILE *foutput, asd_tree_t *tree)
+static void _asd_print_graphviz(FILE *foutput, AsdTree *tree)
 {
     int i;
     if (tree != NULL)
@@ -98,7 +108,7 @@ static void _asd_print_graphviz(FILE *foutput, asd_tree_t *tree)
     }
 }
 
-void asd_print_graphviz(asd_tree_t *tree)
+void asd_print_graphviz(AsdTree *tree)
 {
     FILE *foutput = stdout;
     if (tree != NULL)
