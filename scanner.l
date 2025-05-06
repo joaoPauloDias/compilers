@@ -1,6 +1,9 @@
 %{
 #include <stdio.h>
 #include "parser.tab.h"
+#include "asd.h"
+
+extern AsdTree *arvore;
 %}
 
 %option noyywrap
@@ -42,9 +45,38 @@ with {return TK_PR_WITH;}
 \& return '&';
 \| return '|';
 
-[a-z_][a-z_0-9]* {return TK_ID;}
-[0-9]*\.[0-9]+ {return TK_LI_FLOAT;}
-[0-9]+ {return TK_LI_INT;}
+[a-z_][a-z_0-9]* {
+    LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
+    if (aux == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    aux->lexem = strdup(yytext);
+    yylval.lexical_value = aux;
+    
+    return TK_ID;
+}
+
+[0-9]*\.[0-9]+ {
+    LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
+    if (aux == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    aux->lexem = strdup(yytext);
+    yylval.lexical_value = aux;
+    
+    return TK_LI_FLOAT;
+}
+
+[0-9]+ {
+    LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
+    if (aux == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    aux->lexem = strdup(yytext);
+    yylval.lexical_value = aux;
+    
+    return TK_LI_INT;
+}
 
 \/\/.*
 

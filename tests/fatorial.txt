@@ -1,0 +1,9 @@
+fatorial returns int with n as int is [
+	
+ 	declare r as int with 1
+
+ 	r is r*n
+
+ 	return r as int
+
+ ];
