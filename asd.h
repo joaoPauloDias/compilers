@@ -2,6 +2,19 @@
 
 #include <stdint.h>
 
+typedef enum
+{
+    TKLiteral,
+    TKIdentifier,
+} TokenKind;
+
+typedef struct
+{
+    uint32_t line_number;
+    TokenKind kind;
+    char *lexem;
+} LexicalValue;
+
 typedef struct AsdTree
 {
     const char *label;

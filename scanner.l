@@ -1,6 +1,9 @@
 %{
 #include <stdio.h>
 #include "parser.tab.h"
+#include "asd.h"
+
+extern AsdTree *arvore;
 %}
 
 %option noyywrap
@@ -61,7 +64,7 @@ with {return TK_PR_WITH;}
     aux->lexem = strdup(yytext);
     yylval.lexical_value = aux;
     
-    return TK_ID;
+    return TK_LI_FLOAT;
 }
 
 [0-9]+ {
@@ -72,7 +75,7 @@ with {return TK_PR_WITH;}
     aux->lexem = strdup(yytext);
     yylval.lexical_value = aux;
     
-    return TK_ID;
+    return TK_LI_INT;
 }
 
 \/\/.*

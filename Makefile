@@ -1,15 +1,15 @@
 TYPE ?= debug
 
 ifeq ($(TYPE),debug)
-	CFLAGS := -fsanitize=address -Wall
+	CFLAGS := -g -fsanitize=address -Wall
 else ifeq ($(TYPE), release)
 	CFLAGS := -O3
 else ifeq ($(TYPE), coverage)
 	CC := gcc
-	CFLAGS := -fsanitize=address -Wall -fprofile-arcs -ftest-coverage
+	CFLAGS := -g -fsanitize=address -Wall -fprofile-arcs -ftest-coverage
 endif
 
-TARGET = etapa2
+TARGET = etapa3
 LEX_OUTPUT = lex.yy.c lex.yy.h
 PARSER_OUTPUT = parser.tab.c parser.tab.h
 OBJS = parser.tab.o lex.yy.o main.o asd.o
