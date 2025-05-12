@@ -208,7 +208,7 @@ expression_list:
 return:
     TK_PR_RETURN expression TK_PR_AS types {
         $$ = asd_new("return"); 
-        asd_add_child($$, $2); 
+        asd_add_child($$, $2);
         free($4);
     } 
 
@@ -230,10 +230,11 @@ conditional:
 else:
     /* empty */ {$$ = NULL;} |
     TK_PR_ELSE command_block {
-        $$ = asd_new("else");
-        if($2){
-            asd_add_child($$, $2);
-        };
+        if ($2) {
+            $$ = $2;
+        } else {
+            $$ = NULL;
+        }
     };
 
 while:
