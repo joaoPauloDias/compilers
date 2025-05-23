@@ -6,12 +6,20 @@
 
 AsdTree *asd_new(const char *label)
 {
-    AsdTree *ret = malloc(sizeof(AsdTree));
+    AsdTree *ret = calloc(1, sizeof(AsdTree));
     assert(ret != NULL);
 
     ret->label = strdup(label);
-    ret->number_of_children = 0;
-    ret->children = NULL;
+
+    return ret;
+}
+
+AsdTree *asd_new_ownership(const char *label)
+{
+    AsdTree *ret = calloc(1, sizeof(AsdTree));
+    assert(ret != NULL);
+
+    ret->label = label;
 
     return ret;
 }
@@ -41,7 +49,7 @@ void asd_free(AsdTree *tree)
     }
     else
     {
-        printf("Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
+        fprintf(stderr, "Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
     }
 }
 
@@ -55,25 +63,24 @@ void asd_add_child(AsdTree *tree, AsdTree *child)
     }
     else
     {
-        printf("Erro: %s recebeu parâmetro tree = %p / %p.\n", __FUNCTION__, tree, child);
+        fprintf(stderr, "Erro: %s recebeu parâmetro tree = %p / %p.\n", __FUNCTION__, tree, child);
     }
 }
 
 static void _asd_print(FILE *foutput, AsdTree *tree, int profundidade)
 {
-    int i;
     if (tree != NULL)
     {
         fprintf(foutput, "%d%*s: Nó '%s' tem %hu filhos:\n", profundidade, profundidade * 2, "", tree->label,
                 tree->number_of_children);
-        for (i = 0; i < tree->number_of_children; i++)
+        for (int i = 0; i < tree->number_of_children; i++)
         {
             _asd_print(foutput, tree->children[i], profundidade + 1);
         }
     }
     else
     {
-        printf("Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
+        fprintf(stderr, "Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
     }
 }
 
@@ -86,7 +93,7 @@ void asd_print(AsdTree *tree)
     }
     else
     {
-        printf("Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
+        fprintf(stderr, "Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
     }
 }
 
@@ -104,7 +111,7 @@ static void _asd_print_graphviz(FILE *foutput, AsdTree *tree)
     }
     else
     {
-        printf("Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
+        fprintf(stderr, "Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
     }
 }
 
@@ -119,6 +126,6 @@ void asd_print_graphviz(AsdTree *tree)
     }
     else
     {
-        printf("Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
+        fprintf(stderr, "Erro: %s recebeu parâmetro tree = %p.\n", __FUNCTION__, tree);
     }
 }
