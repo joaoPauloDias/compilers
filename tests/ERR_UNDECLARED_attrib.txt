@@ -1,0 +1,3 @@
+main returns int is [
+    foo is 69
+];

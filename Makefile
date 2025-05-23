@@ -1,20 +1,22 @@
 TYPE ?= debug
 
 ifeq ($(TYPE),debug)
-	CFLAGS := -g -fsanitize=address -Wall
+	CFLAGS := -g -fsanitize=address -Wall -std=gnu17
 else ifeq ($(TYPE), release)
-	CFLAGS := -O3
+	CFLAGS := -O3 -std=gnu17
 else ifeq ($(TYPE), coverage)
 	CC := gcc
-	CFLAGS := -g -fsanitize=address -Wall -fprofile-arcs -ftest-coverage
+	CFLAGS := -g -fsanitize=address -Wall -std=gnu17 -fprofile-arcs -ftest-coverage
 endif
 
-TARGET = etapa3
+TARGET = etapa4
 LEX_OUTPUT = lex.yy.c lex.yy.h
 PARSER_OUTPUT = parser.tab.c parser.tab.h
-OBJS = parser.tab.o lex.yy.o main.o asd.o
+OBJS = parser.tab.o lex.yy.o main.o asd.o arena.o symbol_table.o errors.o
 
-TEST_FILES := $(wildcard tests/*.txt)
+TEST_FILES := $(wildcard tests/*)
+GOOD_FILES := $(wildcard good/*)
+BAD_FILES := $(wildcard bad/*)
 
 all: $(TARGET)
 
@@ -34,8 +36,9 @@ lex.yy.c: scanner.l parser.tab.c
 
 test: all $(TEST_FILES)
 	@for file in $(TEST_FILES); do \
-		echo "Testing $$file"; \
-		./$(TARGET) < $$file || exit 1; \
+		echo -n "$$file: "; \
+		./$(TARGET) < $$file > /dev/null; \
+		echo ""; \
 	done
 
 .PHONY: coverage
