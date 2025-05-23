@@ -1,12 +1,21 @@
+declare bar as int,
+declare biz as int,
+
+foo returns int is [
+    return 69 as int
+],
+
 main returns int is [
-    if (1 | 2) []
+    if (1 | 2) [[]]
     if (1 & 2) []
     if (1 != 2 | 1 == 2) []
     if (1 > 2 | 1 < 2 | 1 >= 2 | 1 <= 2) []
     if (1 + 2 - 2) []
     if (1 * 2 / 3 % 4) []
     if (+1 | -2 | !255) []
-    if (foo() | bar | 69 | 420.0 | (biz)) []
+    if (foo() | bar | 69 | (biz)) []
+    if (420.0 & 8008.5) []
     if (----bar) [] else []
     while (!foo) []
+    return 1 as int
 ];

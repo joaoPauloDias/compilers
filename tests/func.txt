@@ -1,9 +1,0 @@
-foo returns float is [],
-bar returns int with biz as float, baz as int is [],
-biz returns float with baz as int is [
-    return baz as float
-],
-main returns int is [
-    foo()
-    bar(69)
-];

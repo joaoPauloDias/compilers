@@ -4,4 +4,5 @@ main returns int is [
     declare bar as float
     bar is 420.666
     bar is .24
+    return 100 as int
 ];

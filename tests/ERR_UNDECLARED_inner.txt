@@ -1,0 +1,5 @@
+main returns int is [
+    if (1 < 2) [
+        foo is 69
+    ]
+];

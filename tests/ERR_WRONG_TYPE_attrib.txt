@@ -1,0 +1,4 @@
+main returns int is [
+    declare foo as float with 420.0
+    foo is 69
+];

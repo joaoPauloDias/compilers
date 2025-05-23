@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "types.h"
+
 typedef enum
 {
     TKLiteral,
@@ -18,6 +20,7 @@ typedef struct
 typedef struct AsdTree
 {
     const char *label;
+    Type type;
     uint16_t number_of_children;
     struct AsdTree **children;
 } AsdTree;
@@ -26,6 +29,11 @@ typedef struct AsdTree
  * Função asd_new, cria um nó sem filhos com o label informado.
  */
 AsdTree *asd_new(const char *label);
+
+/*
+ * Takes ownership of @p label
+ */
+AsdTree *asd_new_ownership(const char *label);
 
 AsdTree *asd_with_capacity(const char *label, uint16_t capacity);
 

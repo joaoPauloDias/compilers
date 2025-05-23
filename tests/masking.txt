@@ -1,0 +1,11 @@
+foo returns int is [
+    declare foo as int with 100
+    return foo as int
+],
+
+main returns int is [
+    declare bar as int
+    bar is foo()
+    declare foo as int with 50
+    return foo as int
+];
