@@ -1,0 +1,4 @@
+main returns int is [
+    declare bar as int
+    bar is foo()
+];

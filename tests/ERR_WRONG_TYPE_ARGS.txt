@@ -4,6 +4,6 @@
 
 main returns int is [
     declare bar as float
-    bar is foo(10)
+    bar is foo(10, 20)
     return 1 as int
 ];
