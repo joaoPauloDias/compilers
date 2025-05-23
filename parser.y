@@ -84,8 +84,8 @@ SymbolEntry* current_function;
 %%
 
 program:
-    list ';' {$$=$1; arvore=$$; } | 
-    /* %empty*/  {$$ = NULL; arvore=$$;};
+    list ';' { $$=$1; arvore=$$; } |
+    /* %empty*/  { $$ = NULL; arvore=$$; };
 
 list:
     element { $$ = $1; } |
@@ -93,7 +93,7 @@ list:
         $$ = $1;
         if($$) {
             if($3)
-                asd_add_child($$, $3); 
+                asd_add_child($$, $3);
         } else {
             if($3) {
                 $$ = $3;
@@ -244,7 +244,7 @@ decl_var:
             err_declared($2->lexem, get_line_number());
         }
 
-        $$=NULL;
+        $$ = NULL;
 
         push_symbol((SymbolEntry) {.key=arena_strdup(allocator, $2->lexem), .nature=SyIdentifier, .type=current_type});
 

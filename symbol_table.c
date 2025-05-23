@@ -4,18 +4,6 @@
 
 #include <string.h>
 
-bool push_if_not_declared(SymbolEntry entry)
-{
-    if (contains_key(entry.key))
-    {
-        return false;
-    }
-
-    push_symbol(entry);
-
-    return true;
-}
-
 void push_symbol(SymbolEntry entry)
 {
     arena_da_append(allocator, &table, entry);

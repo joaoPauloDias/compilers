@@ -60,9 +60,6 @@ extern Scopes scopes;
 
 extern ParamStack param_stack;
 
-/// Returns `true` on success
-bool push_if_not_declared(SymbolEntry entry);
-
 void push_symbol(SymbolEntry entry);
 
 SymbolEntry* top_symbol();

@@ -24,22 +24,11 @@ AsdTree *asd_new_ownership(const char *label)
     return ret;
 }
 
-AsdTree *asd_with_capacity(const char *label, uint16_t capacity)
-{
-    AsdTree *ret = asd_new(label);
-
-    ret->children = malloc(capacity);
-    ret->number_of_children = capacity;
-
-    return ret;
-}
-
 void asd_free(AsdTree *tree)
 {
     if (tree != NULL)
     {
-        int i;
-        for (i = 0; i < tree->number_of_children; i++)
+        for (int i = 0; i < tree->number_of_children; i++)
         {
             asd_free(tree->children[i]);
         }

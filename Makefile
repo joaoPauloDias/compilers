@@ -47,7 +47,7 @@ coverage: all $(TEST_FILES)
 	lcov --directory . --zerocounters
 	@for file in $(TEST_FILES); do \
 		echo "Testing $$file"; \
-		./$(TARGET) < $$file; \
+		./$(TARGET) < $$file > /dev/null; \
 	done
 	lcov --capture --directory . --output-file coverage.info
 	genhtml coverage.info --output-directory coverage_report
