@@ -29,11 +29,6 @@
 #include <stdio.h>
 #endif // ARENA_NOSTDIO
 
-#ifndef ARENA_ASSERT
-#include <assert.h>
-#define ARENA_ASSERT assert
-#endif
-
 #define ARENA_BACKEND_LIBC_MALLOC 0
 #define ARENA_BACKEND_LINUX_MMAP 1
 #define ARENA_BACKEND_WIN32_VIRTUALALLOC 2

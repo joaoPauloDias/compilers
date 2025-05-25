@@ -1,5 +1,6 @@
 #include "arena.h"
 
+#include <assert.h>
 #include <string.h>
 
 #if ARENA_BACKEND == ARENA_BACKEND_LIBC_MALLOC
@@ -12,7 +13,7 @@ Region *new_region(size_t capacity)
     size_t size_bytes = sizeof(Region) + sizeof(uintptr_t)*capacity;
     // TODO: it would be nice if we could guarantee that the regions are allocated by ARENA_BACKEND_LIBC_MALLOC are page aligned
     Region *r = (Region*)malloc(size_bytes);
-    ARENA_ASSERT(r); // TODO: since ARENA_ASSERT is disableable go through all the places where we use it to check for failed memory allocation and return with NULL there.
+    assert(r);
     r->next = NULL;
     r->count = 0;
     r->capacity = capacity;
@@ -31,7 +32,7 @@ Region *new_region(size_t capacity)
 {
     size_t size_bytes = sizeof(Region) + sizeof(uintptr_t) * capacity;
     Region *r = mmap(NULL, size_bytes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-    ARENA_ASSERT(r != MAP_FAILED);
+    assert(r != MAP_FAILED);
     r->next = NULL;
     r->count = 0;
     r->capacity = capacity;
@@ -42,7 +43,7 @@ void free_region(Region *r)
 {
     size_t size_bytes = sizeof(Region) + sizeof(uintptr_t) * r->capacity;
     int ret = munmap(r, size_bytes);
-    ARENA_ASSERT(ret == 0);
+    assert(ret == 0);
 }
 
 #else
@@ -60,7 +61,7 @@ void *arena_alloc(Arena *a, size_t size_bytes)
     size_t size = (size_bytes + sizeof(uintptr_t) - 1)/sizeof(uintptr_t);
 
     if (a->end == NULL) {
-        ARENA_ASSERT(a->begin == NULL);
+        assert(a->begin == NULL);
         size_t capacity = ARENA_REGION_DEFAULT_CAPACITY;
         if (capacity < size) capacity = size;
         a->end = new_region(capacity);
@@ -72,7 +73,7 @@ void *arena_alloc(Arena *a, size_t size_bytes)
     }
 
     if (a->end->count + size > a->end->capacity) {
-        ARENA_ASSERT(a->end->next == NULL);
+        assert(a->end->next == NULL);
         size_t capacity = ARENA_REGION_DEFAULT_CAPACITY;
         if (capacity < size) capacity = size;
         a->end->next = new_region(capacity);
@@ -118,7 +119,7 @@ char *arena_vsprintf(Arena *a, const char *format, va_list args)
     int n = vsnprintf(NULL, 0, format, args_copy);
     va_end(args_copy);
 
-    ARENA_ASSERT(n >= 0);
+    assert(n >= 0);
     char *result = (char*)arena_alloc(a, n + 1);
     vsnprintf(result, n + 1, format, args);
 
@@ -140,7 +141,7 @@ Arena_Mark arena_snapshot(Arena *a)
 {
     Arena_Mark m;
     if(a->end == NULL){ //snapshot of uninitialized arena
-        ARENA_ASSERT(a->begin == NULL);
+        assert(a->begin == NULL);
         m.region = a->end;
         m.count  = 0;
     }else{

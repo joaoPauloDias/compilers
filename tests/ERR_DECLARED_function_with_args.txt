@@ -1,0 +1,4 @@
+declare foo as int,
+foo returns float with a as float is [
+    return a as float
+];

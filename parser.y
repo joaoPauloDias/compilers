@@ -120,6 +120,10 @@ types:
 param: TK_ID TK_PR_AS types {
     $$ = NULL;
 
+    if (contains_in_current_scope($1->lexem)) {
+        err_declared($1->lexem, get_line_number());
+    }
+
     push_symbol((SymbolEntry) {.key=arena_strdup(allocator, $1->lexem), .type=current_type, .nature=SyIdentifier});
 
     free($1->lexem);
@@ -132,6 +136,10 @@ params_list:
 
 func_def:
     TK_ID TK_PR_RETURNS types {
+        if (contains_key($1->lexem)) {
+            err_declared($1->lexem, get_line_number());
+        }
+
         push_symbol((SymbolEntry) {.key=$1->lexem, .type=current_type, .nature=SyFunction});
         current_function = top_symbol();
     }
@@ -145,6 +153,10 @@ func_def:
         free($3);
     } |
     TK_ID TK_PR_RETURNS types {
+        if (contains_key($1->lexem)) {
+            err_declared($1->lexem, get_line_number());
+        }
+        
         push_symbol((SymbolEntry) {.key=$1->lexem, .type=current_type, .nature=SyFunction});
         current_function = top_symbol();
 

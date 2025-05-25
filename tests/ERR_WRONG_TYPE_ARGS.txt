@@ -1,4 +1,4 @@
- foo returns float with var as int, bvar as float is [
+foo returns float with var as int, bvar as float is [
     return 69.0 as float
 ],
 

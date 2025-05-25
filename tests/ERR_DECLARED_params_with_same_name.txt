@@ -1,0 +1,3 @@
+foo returns float with a as int, b as float, a as float is [
+    return 69.0 as float
+];
