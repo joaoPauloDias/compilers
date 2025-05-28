@@ -1,0 +1,9 @@
+foo returns float with var as int, bvar as float is [
+    return 69.0 as float
+],
+
+main returns int is [
+    declare bar as float
+    bar is foo(10, 20)
+    return 1 as int
+];

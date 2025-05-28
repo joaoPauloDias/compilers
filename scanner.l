@@ -1,5 +1,7 @@
 %{
+#include <assert.h>
 #include <stdio.h>
+
 #include "parser.tab.h"
 #include "asd.h"
 
@@ -47,10 +49,11 @@ with {return TK_PR_WITH;}
 
 [a-z_][a-z_0-9]* {
     LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
-    if (aux == NULL) {
-        exit(EXIT_FAILURE);
-    }
+    assert(aux != NULL);
+
+    aux->kind = TKIdentifier;
     aux->lexem = strdup(yytext);
+
     yylval.lexical_value = aux;
     
     return TK_ID;
@@ -58,10 +61,11 @@ with {return TK_PR_WITH;}
 
 [0-9]*\.[0-9]+ {
     LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
-    if (aux == NULL) {
-        exit(EXIT_FAILURE);
-    }
+    assert(aux != NULL);
+
+    aux->kind = TKLiteral;
     aux->lexem = strdup(yytext);
+
     yylval.lexical_value = aux;
     
     return TK_LI_FLOAT;
@@ -69,10 +73,11 @@ with {return TK_PR_WITH;}
 
 [0-9]+ {
     LexicalValue* aux = (LexicalValue*) malloc(sizeof(LexicalValue));
-    if (aux == NULL) {
-        exit(EXIT_FAILURE);
-    }
+    assert(aux != NULL);
+
+    aux->kind = TKLiteral;
     aux->lexem = strdup(yytext);
+
     yylval.lexical_value = aux;
     
     return TK_LI_INT;

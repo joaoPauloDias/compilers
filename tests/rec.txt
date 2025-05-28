@@ -1,0 +1,10 @@
+fibonacci returns int with a as int is [
+    if (a == 0) [
+        return 1 as int
+    ] else [
+        if (a == 1) [
+            return 1 as int
+        ]
+    ]
+    return fibonacci(a-1) + fibonacci(a-2) as int
+];

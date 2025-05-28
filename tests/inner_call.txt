@@ -1,0 +1,13 @@
+foo returns int with a as int, b as int, c as int is [
+    return a + b + c as int
+],
+
+bar returns int with b as int is [
+    return b as int
+],
+
+main returns int is [
+    declare var as int
+    var is foo(69, bar(666), 420)
+    return var as int
+];

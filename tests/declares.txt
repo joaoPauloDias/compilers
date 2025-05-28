@@ -1,6 +1,0 @@
-declare foo as float,
-declare bar as int,
-main returns int is [
-    declare foo as float with 69.420
-    declare bar as int with 1337
-];
