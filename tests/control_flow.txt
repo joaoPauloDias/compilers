@@ -16,6 +16,6 @@ main returns int is [
     if (foo() | bar | 69 | (biz)) []
     if (420.0 & 8008.5) []
     if (----bar) [] else []
-    while (!foo) []
+    while (!1) []
     return 1 as int
 ];

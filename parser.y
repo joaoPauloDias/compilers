@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "types.h"
 #include "errors.h"
 #include "asd.h"
 #include "arena.h"
@@ -19,7 +20,6 @@ int get_line_number(void);
 
 extern AsdTree *arvore;
 
-Type current_type;
 SymbolEntry* current_function;
 
 %}
@@ -27,6 +27,7 @@ SymbolEntry* current_function;
 %union {
     AsdTree *node;
     LexicalValue *lexical_value;
+    Type type;
 }
 
 %token TK_PR_AS
@@ -63,6 +64,7 @@ SymbolEntry* current_function;
 %type<node> n6
 %type<node> n7
 %type<node> command_list
+%type<node> function_block
 %type<node> command_block
 %type<node> simple_command
 %type<node> params
@@ -77,7 +79,7 @@ SymbolEntry* current_function;
 %type<node> literal
 %type<node> params_list
 %type<node> param
-%type<node> types
+%type<type> type
 
 %define parse.error verbose
 
@@ -107,24 +109,22 @@ element:
     func_def {$$ = $1;} |
     decl_var {$$ = $1;};
 
-types:
+type:
     TK_PR_FLOAT {
-        $$ = NULL;
-        current_type = TFloat;
+        $$ = TFloat;
     } |
     TK_PR_INT {
-        $$ = NULL;
-        current_type = TInt;
+        $$ = TInt;
     };
 
-param: TK_ID TK_PR_AS types {
+param: TK_ID TK_PR_AS type {
     $$ = NULL;
 
     if (contains_in_current_scope($1->lexem)) {
         err_declared($1->lexem, get_line_number());
     }
 
-    push_symbol((SymbolEntry) {.key=arena_strdup(allocator, $1->lexem), .type=current_type, .nature=SyIdentifier});
+    push_symbol((SymbolEntry) {.key=arena_strdup(allocator, $1->lexem), .type=$3, .nature=SyIdentifier});
 
     free($1->lexem);
     free($1);
@@ -135,12 +135,12 @@ params_list:
     params_list ',' param { $$ = NULL; };
 
 func_def:
-    TK_ID TK_PR_RETURNS types {
+    TK_ID TK_PR_RETURNS type {
         if (contains_key($1->lexem)) {
             err_declared($1->lexem, get_line_number());
         }
 
-        push_symbol((SymbolEntry) {.key=$1->lexem, .type=current_type, .nature=SyFunction});
+        push_symbol((SymbolEntry) {.key=$1->lexem, .type=$3, .nature=SyFunction});
         current_function = top_symbol();
     }
     TK_PR_IS command_block {
@@ -150,14 +150,13 @@ func_def:
         if($6) {
             asd_add_child($$, $6);
         }
-        free($3);
     } |
-    TK_ID TK_PR_RETURNS types {
+    TK_ID TK_PR_RETURNS type {
         if (contains_key($1->lexem)) {
             err_declared($1->lexem, get_line_number());
         }
         
-        push_symbol((SymbolEntry) {.key=$1->lexem, .type=current_type, .nature=SyFunction});
+        push_symbol((SymbolEntry) {.key=$1->lexem, .type=$3, .nature=SyFunction});
         current_function = top_symbol();
 
         push_scope();
@@ -176,7 +175,7 @@ func_def:
         current_function->num_args = num_args;
         current_function->args = args;
     }
-    TK_PR_IS command_block {
+    TK_PR_IS function_block {
         pop_scope();
 
         $$ = asd_new_ownership($1->lexem);
@@ -187,7 +186,7 @@ func_def:
 
         free($1);
     };
-
+    
 simple_command:
     command_block {$$ = $1;} | 
     decl_var {$$ = $1;} |
@@ -215,6 +214,10 @@ command_list:
         }
     };
 
+function_block:
+    '[' ']' { $$ = NULL; } |
+    '[' command_list ']' {  $$ = $2; };
+
 command_block:
     '[' ']' { $$ = NULL; } |
     '[' { push_scope(); } command_list ']' { pop_scope(); $$ = $3; };
@@ -232,33 +235,34 @@ literal:
     };
 
 decl_var_with_initialization:
-    TK_PR_DECLARE TK_ID TK_PR_AS types TK_PR_WITH literal {
+    TK_PR_DECLARE TK_ID TK_PR_AS type TK_PR_WITH literal {
         if (contains_in_current_scope($2->lexem)) {
             err_declared($2->lexem, get_line_number());
         }
 
-        if ($6->type != current_type) {
+        if ($6->type != $4) {
             err_wrong_type($6->label, get_line_number());
         }
 
         $$ = asd_new("with");
         asd_add_child($$, asd_new_ownership($2->lexem));
-        asd_add_child($$, $6);
+        $$->type = $4;
 
-        push_symbol((SymbolEntry) {.key=$2->lexem, .nature=SyIdentifier, .type=current_type});
-
+        push_symbol((SymbolEntry) {.key=$2->lexem, .nature=SyIdentifier, .type=$4});
         free($2);
+
+        asd_add_child($$, $6);
     };
 
 decl_var:
-    TK_PR_DECLARE TK_ID TK_PR_AS types {
+    TK_PR_DECLARE TK_ID TK_PR_AS type {
         if (contains_in_current_scope($2->lexem)) {
             err_declared($2->lexem, get_line_number());
         }
 
         $$ = NULL;
 
-        push_symbol((SymbolEntry) {.key=arena_strdup(allocator, $2->lexem), .nature=SyIdentifier, .type=current_type});
+        push_symbol((SymbolEntry) {.key=arena_strdup(allocator, $2->lexem), .nature=SyIdentifier, .type=$4});
 
         free($2->lexem);
         free($2);
@@ -282,7 +286,9 @@ attribution:
             err_wrong_type($1->lexem, get_line_number());
         }
 
-        $$ = asd_new("is"); 
+        $$ = asd_new("is");
+        $$->type = $3->type;
+
         asd_add_child($$, asd_new_ownership($1->lexem)); 
         asd_add_child($$, $3); 
 
@@ -347,19 +353,18 @@ params:
     };
 
 return:
-    TK_PR_RETURN expression TK_PR_AS types {
-        if (current_function->type != current_type) {
+    TK_PR_RETURN expression TK_PR_AS type {
+        if (current_function->type != $4) {
             err_wrong_type("return", get_line_number());
         }
 
-        if ($2->type != current_type) {
+        if ($2->type != $4) {
             err_wrong_type("expression", get_line_number());
         }
 
         $$ = asd_new("return");
         asd_add_child($$, $2);
-        free($4);
-    } 
+    }
 
 conditional:
     TK_PR_IF '(' expression ')' command_block else {
@@ -373,6 +378,9 @@ conditional:
         }
 
         if ($6) {
+            if ($5 != NULL && $5->type != $6->type) {
+                err_wrong_type("else", get_line_number());
+            }
             asd_add_child($$, $6);
         }
     };
@@ -534,6 +542,15 @@ n1:
 n0: 
     func_call { $$ = $1; } |
     TK_ID {
+        SymbolEntry* entry = get_entry($1->lexem);
+        if (entry == NULL) {
+            err_undeclared($1->lexem, get_line_number());
+        }
+
+        if (entry->nature == SyFunction) {
+            err_function($1->lexem, get_line_number());
+        }
+
         $$ = asd_new_ownership($1->lexem);
         $$->type = get_entry($1->lexem)->type;
         free($1);

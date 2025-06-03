@@ -1,5 +1,0 @@
-foo returns int with bar as float is [
-    if (1 < 2) [
-        bar is 69.0
-    ]
-];

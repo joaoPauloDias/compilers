@@ -1,4 +1,5 @@
 #include "errors.h"
+#include "types.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -42,12 +43,12 @@ void err_missing_args()
 
 void err_excess_args()
 {
-    fprintf(stderr, "ERROR: This function does not accept more args\n");
+    fprintf(stderr, "ERROR: This function call has too many args\n");
     exit(ERR_EXCESS_ARGS);
 }
 
 void err_wrong_type_args(Type type)
 {
-    fprintf(stderr, "ERROR: The type %d does not match the expected function argument type\n", type);
+    fprintf(stderr, "ERROR: The type \"%s\" does not match the expected function argument type\n", TYPE_LOOKUP[type]);
     exit(ERR_WRONG_TYPE_ARGS);
 }
