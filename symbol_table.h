@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "arena.h"
 #include "types.h"
 
 typedef enum
@@ -19,7 +20,9 @@ typedef struct
     SymbolNature nature;
     // Only != 0 if it is a function
     size_t num_args;
-    Type* args;
+    Type *args;
+    size_t offset;
+    bool is_global;
 } SymbolEntry;
 
 typedef struct
@@ -27,6 +30,7 @@ typedef struct
     size_t count;
     size_t capacity;
     SymbolEntry *items;
+    size_t base_offset;
 } SymbolTable;
 
 typedef struct
@@ -40,11 +44,12 @@ typedef struct
 {
     size_t count;
     size_t capacity;
+
     struct
     {
-        SymbolEntry* function;
+        SymbolEntry *function;
         size_t count;
-    }* items;
+    } *items;
 } ParamStack;
 
 enum ParamResult
@@ -62,7 +67,7 @@ extern ParamStack param_stack;
 
 void push_symbol(SymbolEntry entry);
 
-SymbolEntry* top_symbol();
+SymbolEntry *top_symbol();
 
 void push_scope();
 
@@ -75,6 +80,6 @@ bool contains_key(const char *key);
 bool contains_in_current_scope(const char *key);
 
 // Returns null if does not contain
-SymbolEntry* get_entry(const char* key);
+SymbolEntry *get_entry(const char *key);
 
 enum ParamResult check_param(Type type);

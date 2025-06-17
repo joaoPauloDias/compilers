@@ -1,22 +1,21 @@
 TYPE ?= debug
 
 ifeq ($(TYPE),debug)
-	CFLAGS := -g -fsanitize=address -Wall -std=gnu17
+    CFLAGS := -g -Wall -std=gnu17
 else ifeq ($(TYPE), release)
-	CFLAGS := -O3 -std=gnu17
+    CFLAGS := -O3 -std=gnu17
 else ifeq ($(TYPE), coverage)
-	CC := gcc
-	CFLAGS := -g -fsanitize=address -Wall -std=gnu17 -fprofile-arcs -ftest-coverage
+    CC := gcc
+    CFLAGS := -g -Wall -std=gnu17 -fprofile-arcs -ftest-coverage
 endif
 
-TARGET = etapa4
+TARGET = etapa5
 LEX_OUTPUT = lex.yy.c lex.yy.h
 PARSER_OUTPUT = parser.tab.c parser.tab.h
-OBJS = parser.tab.o lex.yy.o main.o asd.o arena.o symbol_table.o errors.o
+OBJS = parser.tab.o lex.yy.o main.o asd.o arena.o symbol_table.o errors.o code_utils.o helpers.o
 
-TEST_FILES := $(wildcard tests/*)
-GOOD_FILES := $(wildcard good/*)
-BAD_FILES := $(wildcard bad/*)
+TEST_FILES := $(wildcard tests/*.txt) 
+SIMULATOR = ./ilocsim.py
 
 all: $(TARGET)
 
@@ -36,8 +35,8 @@ lex.yy.c: scanner.l parser.tab.c
 
 test: all $(TEST_FILES)
 	@for file in $(TEST_FILES); do \
-		echo -n "$$file: "; \
-		./$(TARGET) < $$file > /dev/null; \
+		echo -n "$$file:\n"; \
+		./$(TARGET) < $$file \
 		echo ""; \
 	done
 
@@ -56,6 +55,6 @@ coverage: all $(TEST_FILES)
 
 clean:
 	rm -f $(TARGET) $(OBJS) $(LEX_OUTPUT) $(PARSER_OUTPUT); \
- 	rm -f *.gv *.info *.gcno
+	rm -f *.gv *.info *.gcno *.dot
 	lcov --directory . --zerocounters
 	rm -rf coverage_report

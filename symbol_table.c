@@ -6,6 +6,16 @@
 
 void push_symbol(SymbolEntry entry)
 {
+    SymbolEntry *current_top_symbol = top_symbol();
+    if (current_top_symbol != NULL)
+    {
+        entry.offset = current_top_symbol->offset + 4;
+    }
+    else
+    {
+        entry.offset = table.base_offset;
+    }
+    entry.is_global = top_scope() == 0;
     arena_da_append(allocator, &table, entry);
 }
 
@@ -20,6 +30,14 @@ SymbolEntry *top_symbol()
 
 void push_scope()
 {
+    if (table.count > 0)
+    {
+        table.base_offset = top_symbol()->offset + 4;
+    }
+    else
+    {
+        table.base_offset = 0;
+    }
     arena_da_append(allocator, &scopes, table.count);
 }
 
@@ -27,6 +45,14 @@ void pop_scope()
 {
     table.count = scopes.items[scopes.count - 1];
     scopes.count -= 1;
+    if (scopes.count == 0 || table.count == 0)
+    {
+        table.base_offset = 0;
+    }
+    else
+    {
+        table.base_offset = top_symbol()->offset + 4;
+    }
 }
 
 size_t top_scope()
@@ -76,8 +102,8 @@ SymbolEntry *get_entry(const char *key)
 
 enum ParamResult check_param(Type type)
 {
-    SymbolEntry* function = param_stack.items[param_stack.count - 1].function;
-    size_t* count = &param_stack.items[param_stack.count - 1].count;
+    SymbolEntry *function = param_stack.items[param_stack.count - 1].function;
+    size_t *count = &param_stack.items[param_stack.count - 1].count;
 
     if (*count == function->num_args)
     {

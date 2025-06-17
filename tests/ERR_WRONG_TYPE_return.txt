@@ -1,3 +1,0 @@
-main returns int is [
-    return 400 as float
-];

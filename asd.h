@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "types.h"
+typedef struct code_t code_t;
 
 typedef enum
 {
@@ -23,6 +24,8 @@ typedef struct AsdTree
     Type type;
     uint16_t number_of_children;
     struct AsdTree **children;
+    code_t *code;
+    char *location;
 } AsdTree;
 
 /*
