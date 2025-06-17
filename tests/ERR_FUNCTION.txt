@@ -1,8 +1,0 @@
-foo returns int is [
-    return 100 as int
-],
-
-main returns int is [
-    foo is 69
-    return 200 as int
-];

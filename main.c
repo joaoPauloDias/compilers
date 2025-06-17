@@ -20,11 +20,12 @@ int main(int argc, char **argv)
     Arena arena = {};
     allocator = &arena;
 
-    table = (SymbolTable) {.capacity = 128, .items = arena_alloc(allocator, sizeof(SymbolEntry) * 128)};
+    table = (SymbolTable){.capacity = 128, .items = arena_alloc(allocator, sizeof(SymbolEntry) * 128)};
 
     int ret = yyparse();
 
-    asd_print_graphviz(arvore);
+    // asd_print_graphviz(arvore);
+    print_code(arvore->code);
     asd_free(arvore);
     yylex_destroy();
 
