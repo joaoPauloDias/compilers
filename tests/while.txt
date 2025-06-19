@@ -1,0 +1,8 @@
+declare foo as int,
+main returns int is [
+    foo is 0
+    while (foo < 2) [
+        foo is foo + 1
+    ]
+    return foo as int
+];
