@@ -14,13 +14,14 @@
 #include "arena.h"
 #include "symbol_table.h"
 #include "code_utils.h"
-#include "helpers.h"
 
 int yylex(void);
 void yyerror (char const *mensagem);
 int get_line_number(void);
 
 extern AsdTree *arvore;
+
+const int CODE_OFFSET_SIZE = 16;
 
 SymbolEntry* current_function;
 
@@ -242,7 +243,6 @@ literal:
         $$ = asd_new_ownership($1->lexem);
         $$->type = TInt;
         free($1);
-         // CODEGEN: Load the integer literal into a new temporary register.
         $$->location = generate_temporary();
         $$->code = generate_code("loadI", $$->label, NULL, $$->location);
     };
@@ -264,10 +264,9 @@ decl_var_with_initialization:
         push_symbol((SymbolEntry) {.key=$2->lexem, .nature=SyIdentifier, .type=$4});
 
          
-        char offset_str[16];
-        sprintf(offset_str, "%d", top_symbol()->offset);
+        char offset_str[CODE_OFFSET_SIZE];
+        sprintf(offset_str, "%zu", (size_t)top_symbol()->offset);
 
-        // $$->location = generate_temporary();
         $$->code = concatenate_code(
             $6->code,
             generate_code("storeAI", $6->location, get_entry($2->lexem)->is_global ? "rbss": "rfp", offset_str)
@@ -316,7 +315,7 @@ attribution:
         asd_add_child($$, asd_new_ownership($1->lexem)); 
         asd_add_child($$, $3); 
 
-        char offset_str[16];
+        char offset_str[CODE_OFFSET_SIZE];
         sprintf(offset_str, "%zu", entry->offset);
         code_t* store_code = generate_code("storeAI", $3->location, get_entry($1->lexem)->is_global ? "rbss": "rfp", offset_str);
         $$->code = concatenate_code($3->code, store_code);
@@ -623,7 +622,6 @@ n2:
         $$ = asd_new("%"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
-            // CODEGEN: does not support modulo operation
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -673,8 +671,8 @@ n0:
 
         $$ = asd_new_ownership($1->lexem);
         $$->type = get_entry($1->lexem)->type;
-        char buf[128];
-        snprintf(buf, sizeof(buf), "%d", get_entry($1->lexem)->offset);
+        char buf[CODE_OFFSET_SIZE];
+        snprintf(buf, sizeof(buf), "%d", (int)get_entry($1->lexem)->offset);
         $$->location = generate_temporary();
         $$->code = generate_code("loadAI", get_entry($1->lexem)->is_global ? "rbss": "rfp", buf, $$->location);
 
