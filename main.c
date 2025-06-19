@@ -24,7 +24,6 @@ int main(int argc, char **argv)
 
     int ret = yyparse();
 
-    // asd_print_graphviz(arvore);
     print_code(arvore->code);
     asd_free(arvore);
     yylex_destroy();

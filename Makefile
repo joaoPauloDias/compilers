@@ -12,7 +12,7 @@ endif
 TARGET = etapa5
 LEX_OUTPUT = lex.yy.c lex.yy.h
 PARSER_OUTPUT = parser.tab.c parser.tab.h
-OBJS = parser.tab.o lex.yy.o main.o asd.o arena.o symbol_table.o errors.o code_utils.o helpers.o
+OBJS = parser.tab.o lex.yy.o main.o asd.o arena.o symbol_table.o errors.o code_utils.o
 
 TEST_FILES := $(wildcard tests/*.txt) 
 SIMULATOR = ./ilocsim.py

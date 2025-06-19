@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-code_t *generate_code(char *mnemonic, char *arg1, char *arg2, char *arg3)
+code_t *generate_code(char *mnemonic, const char *arg1, const char *arg2, const char *arg3)
 {
     code_t *code = (code_t *)malloc(sizeof(code_t));
 
@@ -33,7 +33,7 @@ code_t *generate_code(char *mnemonic, char *arg1, char *arg2, char *arg3)
 char *generate_temporary()
 {
     char temp[MAX_TEMPORARY_LENGTH];
-    snprintf(temp, MAX_TEMPORARY_LENGTH, "r%d", current_temp++);
+    snprintf(temp, MAX_TEMPORARY_LENGTH, "r%d", current_temporary++);
     return strdup(temp);
 }
 
@@ -44,13 +44,24 @@ char *generate_label()
     return strdup(label);
 }
 
+void generate_code_binary_operation(char *mnemonic, AsdTree *root, struct AsdTree *left, struct AsdTree *right)
+{
+    root->location = generate_temporary();
+    root->code = concatenate_multiple_codes(
+        left->code, right->code, generate_code(mnemonic, left->location, right->location, root->location), NULL);
+}
+
 code_t *concatenate_code(code_t *first, code_t *second)
 {
     if (second == NULL)
+    {
         return first;
+    }
 
     if (first == NULL && second != NULL)
+    {
         return second;
+    }
 
     code_t *current_code = first;
 
@@ -60,6 +71,7 @@ code_t *concatenate_code(code_t *first, code_t *second)
     }
 
     current_code->next = second;
+
     return first;
 }
 
