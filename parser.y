@@ -225,7 +225,7 @@ command_list:
 
 function_block:
     '[' ']' { $$ = NULL; } |
-    '[' command_list ']' {  $$ = $2;  print_code($2->code);};
+    '[' command_list ']' {  $$ = $2; };
 
 command_block:
     '[' ']' { $$ = NULL; } |
