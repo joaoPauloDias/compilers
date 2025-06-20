@@ -9,9 +9,9 @@ typedef struct iloc_t
 {
     char *mnemonic;
     char *label;
-    char *arg1;
-    char *arg2;
-    char *arg3;
+    const char *arg1;
+    const char *arg2;
+    const char *arg3;
 } iloc_t;
 
 typedef struct code_t
