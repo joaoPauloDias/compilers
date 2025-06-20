@@ -263,13 +263,12 @@ decl_var_with_initialization:
 
         push_symbol((SymbolEntry) {.key=$2->lexem, .nature=SyIdentifier, .type=$4});
 
-         
         char offset_str[CODE_OFFSET_SIZE];
         sprintf(offset_str, "%zu", (size_t)top_symbol()->offset);
 
         $$->code = concatenate_code(
             $6->code,
-            generate_code("storeAI", $6->location, get_entry($2->lexem)->is_global ? "rbss": "rfp", offset_str)
+            generate_code("storeAI", $6->location, get_entry($2->lexem)->is_global ? "rbss": "rfp", arena_strdup(allocator, offset_str))
         );
 
         free($2);
@@ -317,7 +316,7 @@ attribution:
 
         char offset_str[CODE_OFFSET_SIZE];
         sprintf(offset_str, "%zu", entry->offset);
-        code_t* store_code = generate_code("storeAI", $3->location, get_entry($1->lexem)->is_global ? "rbss": "rfp", offset_str);
+        code_t* store_code = generate_code("storeAI", $3->location, get_entry($1->lexem)->is_global ? "rbss": "rfp", arena_strdup(allocator, offset_str));
         $$->code = concatenate_code($3->code, store_code);
 
         free($1);
@@ -674,17 +673,18 @@ n0:
         char buf[CODE_OFFSET_SIZE];
         snprintf(buf, sizeof(buf), "%d", (int)get_entry($1->lexem)->offset);
         $$->location = generate_temporary();
-        $$->code = generate_code("loadAI", get_entry($1->lexem)->is_global ? "rbss": "rfp", buf, $$->location);
+        $$->code = generate_code("loadAI", get_entry($1->lexem)->is_global ? "rbss": "rfp", arena_strdup(allocator, buf), $$->location);
 
         free($1);
     } |
     TK_LI_FLOAT { $$ = asd_new_ownership($1->lexem); free($1); $$->type = TFloat; } |
-    TK_LI_INT { $$ = asd_new_ownership($1->lexem); 
-                $$->type = TInt;  
-                $$->location = generate_temporary();
-                $$->code = generate_code("loadI", $$->label, NULL, $$->location);
-                free($1); 
-                } |
+    TK_LI_INT {
+        $$ = asd_new_ownership($1->lexem);
+        $$->type = TInt;
+        $$->location = generate_temporary();
+        $$->code = generate_code("loadI", $$->label, NULL, $$->location);
+        free($1);
+    } |
     '(' expression ')' { if($2) {$$ = $2;}; };
 %%
 

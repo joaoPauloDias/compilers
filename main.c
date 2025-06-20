@@ -4,6 +4,7 @@
 #include "asd.h"
 #include "symbol_table.h"
 
+#include "code_utils.h"
 #include "parser.tab.h"
 
 extern int yyparse(void);
