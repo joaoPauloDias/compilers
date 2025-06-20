@@ -1,0 +1,9 @@
+negation returns int is [
+    declare foo as int with 1
+    if(!(foo == 1)) [
+        foo is -1
+    ] else [
+        foo is 2
+    ]
+    return foo as int
+];

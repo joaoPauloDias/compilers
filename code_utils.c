@@ -120,35 +120,32 @@ void print_code(const code_t *code)
         return;
     }
 
-    iloc_t instruction = code->instruction;
+    const iloc_t *inst = &code->instruction;
+    const char *label = inst->label ? inst->label : "";
+    const char *colon = inst->label ? ":" : "";
+    const char *arg1 = inst->arg1 ? inst->arg1 : "";
+    const char *arg2 = inst->arg2 ? inst->arg2 : "";
+    const char *arg3 = inst->arg3 ? inst->arg3 : "";
 
-    if (strcmp(instruction.mnemonic, "cbr") == 0 || strcmp(instruction.mnemonic, "jumpI") == 0)
+    if (strcmp(inst->mnemonic, "cbr") == 0 || strcmp(inst->mnemonic, "jumpI") == 0)
     {
-        printf("%2s%1s %-8s %3s -> %3s%1s %3s\n", instruction.label != NULL ? instruction.label : "",
-               instruction.label != NULL ? ":" : "", instruction.mnemonic,
-               instruction.arg1 != NULL ? instruction.arg1 : "", instruction.arg2 != NULL ? instruction.arg2 : "",
-               instruction.arg3 != NULL ? "," : "", instruction.arg3 != NULL ? instruction.arg3 : "");
+        printf("%2s%1s %-8s %3s -> %3s%1s %3s\n", label, colon, inst->mnemonic, arg1, arg2, inst->arg3 ? "," : "",
+               arg3);
     }
-    else if (strcmp(instruction.mnemonic, "storeAI") == 0)
+    else if (strcmp(inst->mnemonic, "storeAI") == 0)
     {
-        printf("%2s%1s %-8s %3s => %3s%1s %3s\n", instruction.label != NULL ? instruction.label : "",
-               instruction.label != NULL ? ":" : "", instruction.mnemonic,
-               instruction.arg1 != NULL ? instruction.arg1 : "", instruction.arg2 != NULL ? instruction.arg2 : "",
-               instruction.arg2 != NULL ? "," : "", instruction.arg3 != NULL ? instruction.arg3 : "");
+        printf("%2s%1s %-8s %3s => %3s%1s %3s\n", label, colon, inst->mnemonic, arg1, arg2, inst->arg2 ? "," : "",
+               arg3);
     }
-    else if (strcmp(instruction.mnemonic, "nop") == 0)
+    else if (strcmp(inst->mnemonic, "nop") == 0)
     {
-        printf("%2s%1s %-8s\n", instruction.label != NULL ? instruction.label : "",
-               instruction.label != NULL ? ":" : "", instruction.mnemonic);
+        printf("%2s%1s %-8s\n", label, colon, inst->mnemonic);
     }
     else
     {
-        char *arrow = strncmp(instruction.mnemonic, "cmp", 3) != 0 ? "=>" : "->";
-        printf("%2s%1s %-8s %3s%1s %3s %s %3s\n", instruction.label != NULL ? instruction.label : "",
-               instruction.label != NULL ? ":" : "", instruction.mnemonic,
-               instruction.arg1 != NULL ? instruction.arg1 : "", instruction.arg2 != NULL ? "," : "",
-               instruction.arg2 != NULL ? instruction.arg2 : "", arrow,
-               instruction.arg3 != NULL ? instruction.arg3 : "");
+        const char *arrow = (strncmp(inst->mnemonic, "cmp", 3) != 0) ? "=>" : "->";
+        printf("%2s%1s %-8s %3s%1s %3s %s %3s\n", label, colon, inst->mnemonic, arg1, inst->arg2 ? "," : "", arg2,
+               arrow, arg3);
     }
 
     print_code(code->next);
