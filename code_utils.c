@@ -1,50 +1,53 @@
 #include "code_utils.h"
-#include "symbol_table.h"
 
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#include "arena.h"
 
 code_t *generate_code(char *mnemonic, const char *arg1, const char *arg2, const char *arg3)
 {
-    code_t *code = (code_t *)malloc(sizeof(code_t));
+    static const code_t zero = {};
+    code_t *code = arena_alloc(allocator, sizeof(code_t));
+    *code = zero;
 
     code->instruction.mnemonic = mnemonic;
 
     if (arg1 != NULL)
     {
-        code->instruction.arg1 = strdup(arg1);
+        code->instruction.arg1 = arg1;
     }
     if (arg2 != NULL)
     {
-        code->instruction.arg2 = strdup(arg2);
+        code->instruction.arg2 = arg2;
     }
     if (arg3 != NULL)
     {
-        code->instruction.arg3 = strdup(arg3);
+        code->instruction.arg3 = arg3;
     }
-
-    code->next = NULL;
 
     return code;
 }
 
 char *generate_temporary()
 {
+    static uint32_t current_temporary = 0;
     char temp[MAX_TEMPORARY_LENGTH];
-    snprintf(temp, MAX_TEMPORARY_LENGTH, "r%d", current_temporary++);
-    return strdup(temp);
+    snprintf(temp, MAX_TEMPORARY_LENGTH, "r%" PRIu32, current_temporary++);
+    return arena_strdup(allocator, temp);
 }
 
 char *generate_label()
 {
+    static uint32_t current_label = 0;
     char label[MAX_LABEL_LENGTH];
-    snprintf(label, MAX_LABEL_LENGTH, "L%d", current_label++);
-    return strdup(label);
+    snprintf(label, MAX_LABEL_LENGTH, "L%" PRIu32, current_label++);
+    return arena_strdup(allocator, label);
 }
 
-void generate_code_binary_operation(char *mnemonic, AsdTree *root, struct AsdTree *left, struct AsdTree *right)
+void generate_code_binary_operation(char *mnemonic, AsdTree *root, AsdTree *left, AsdTree *right)
 {
     root->location = generate_temporary();
     root->code = concatenate_multiple_codes(
@@ -58,7 +61,7 @@ code_t *concatenate_code(code_t *first, code_t *second)
         return first;
     }
 
-    if (first == NULL && second != NULL)
+    if (first == NULL)
     {
         return second;
     }
@@ -81,10 +84,12 @@ code_t *concatenate_multiple_codes(code_t *first, ...)
     va_start(ptr, first);
 
     code_t *tail = first;
-    if (tail)
+    if (tail != NULL)
     {
-        while (tail->next)
+        while (tail->next != NULL)
+        {
             tail = tail->next;
+        }
     }
 
     code_t *next_code;
@@ -98,22 +103,24 @@ code_t *concatenate_multiple_codes(code_t *first, ...)
         {
             tail->next = next_code;
         }
-        while (tail->next)
+        while (tail->next != NULL)
+        {
             tail = tail->next;
+        }
     }
 
     va_end(ptr);
     return first;
 }
 
-void print_code(code_t *code)
+void print_code(const code_t *code)
 {
     if (code == NULL)
     {
         return;
     }
 
-    struct iloc_t instruction = code->instruction;
+    iloc_t instruction = code->instruction;
 
     if (strcmp(instruction.mnemonic, "cbr") == 0 || strcmp(instruction.mnemonic, "jumpI") == 0)
     {

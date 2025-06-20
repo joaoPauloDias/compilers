@@ -1,7 +1,7 @@
 TYPE ?= debug
 
 ifeq ($(TYPE),debug)
-    CFLAGS := -g -Wall -std=gnu17
+    CFLAGS := -g -Wall -std=gnu17 -fsanitize=address
 else ifeq ($(TYPE), release)
     CFLAGS := -O3 -std=gnu17
 else ifeq ($(TYPE), coverage)
