@@ -1,3 +1,0 @@
-declare foo as int,
-main returns int is [],
-declare foo as int;

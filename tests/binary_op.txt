@@ -1,0 +1,8 @@
+main returns int is [
+    declare foo as int with 100
+    foo is 100 + 100
+    foo is 100 / 100
+    foo is 100 * 100
+    foo is 100 - 100
+    
+];

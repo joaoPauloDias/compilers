@@ -1,5 +1,0 @@
-main returns int is [
-    declare foo as int with 69
-    declare foo as int with 420
-    return 0 as int
-];

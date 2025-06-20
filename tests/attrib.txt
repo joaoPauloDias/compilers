@@ -1,8 +1,8 @@
 main returns int is [
     declare foo as int
     foo is 69
-    declare bar as float
-    bar is 420.666
-    bar is .24
+    declare bar as int
+    bar is 420
+    bar is 24
     return 100 as int
 ];

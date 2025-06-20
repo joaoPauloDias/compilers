@@ -13,12 +13,15 @@
 #include "asd.h"
 #include "arena.h"
 #include "symbol_table.h"
+#include "code_utils.h"
 
 int yylex(void);
 void yyerror (char const *mensagem);
 int get_line_number(void);
 
 extern AsdTree *arvore;
+
+const int CODE_OFFSET_SIZE = 16;
 
 SymbolEntry* current_function;
 
@@ -86,7 +89,7 @@ SymbolEntry* current_function;
 %%
 
 program:
-    list ';' { $$=$1; arvore=$$; } |
+    list ';' { $$=$1; arvore=$$;} |
     /* %empty*/  { $$ = NULL; arvore=$$; };
 
 list:
@@ -94,8 +97,11 @@ list:
     element ',' list { 
         $$ = $1;
         if($$) {
-            if($3)
+            if($3) {
                 asd_add_child($$, $3);
+                $$->location = generate_temporary();
+                $$->code = concatenate_code($1->code, $3->code);
+            }
         } else {
             if($3) {
                 $$ = $3;
@@ -149,6 +155,7 @@ func_def:
         free($1);
         if($6) {
             asd_add_child($$, $6);
+            $$->code = $6->code;
         }
     } |
     TK_ID TK_PR_RETURNS type {
@@ -182,6 +189,7 @@ func_def:
 
         if ($9) {
             asd_add_child($$, $9);
+            $$->code = $9->code; 
         }
 
         free($1);
@@ -204,6 +212,8 @@ command_list:
             $$ = $1;
             if($2) {
                 asd_add_child($$, $2);
+                $$->location = generate_temporary();
+                $$->code = concatenate_code($1->code, $2->code);
             }
         } else {
             if($2) {
@@ -220,18 +230,21 @@ function_block:
 
 command_block:
     '[' ']' { $$ = NULL; } |
-    '[' { push_scope(); } command_list ']' { pop_scope(); $$ = $3; };
+    '[' { push_scope(); } command_list ']' { pop_scope(); $$ = $3;};
 
 literal: 
     TK_LI_FLOAT { 
         $$ = asd_new_ownership($1->lexem);
         $$->type = TFloat;
         free($1);
+        $$->code = NULL;
     } |
     TK_LI_INT {
         $$ = asd_new_ownership($1->lexem);
         $$->type = TInt;
         free($1);
+        $$->location = generate_temporary();
+        $$->code = generate_code("loadI", $$->label, NULL, $$->location);
     };
 
 decl_var_with_initialization:
@@ -249,6 +262,15 @@ decl_var_with_initialization:
         $$->type = $4;
 
         push_symbol((SymbolEntry) {.key=$2->lexem, .nature=SyIdentifier, .type=$4});
+
+        char offset_str[CODE_OFFSET_SIZE];
+        sprintf(offset_str, "%zu", (size_t)top_symbol()->offset);
+
+        $$->code = concatenate_code(
+            $6->code,
+            generate_code("storeAI", $6->location, get_entry($2->lexem)->is_global ? "rbss": "rfp", arena_strdup(allocator, offset_str))
+        );
+
         free($2);
 
         asd_add_child($$, $6);
@@ -291,6 +313,11 @@ attribution:
 
         asd_add_child($$, asd_new_ownership($1->lexem)); 
         asd_add_child($$, $3); 
+
+        char offset_str[CODE_OFFSET_SIZE];
+        sprintf(offset_str, "%zu", entry->offset);
+        code_t* store_code = generate_code("storeAI", $3->location, get_entry($1->lexem)->is_global ? "rbss": "rfp", arena_strdup(allocator, offset_str));
+        $$->code = concatenate_code($3->code, store_code);
 
         free($1);
     }; 
@@ -363,6 +390,7 @@ return:
         }
 
         $$ = asd_new("return");
+        $$->code = $2->code;
         asd_add_child($$, $2);
     }
 
@@ -383,6 +411,35 @@ conditional:
             }
             asd_add_child($$, $6);
         }
+
+             
+        char *label_true = generate_label();
+        char *label_false = generate_label();
+        char *label_end = generate_label();
+
+        code_t *code_cbr = generate_code("cbr", $3->location, label_true, label_false);
+        
+        code_t *code_jump = generate_code("jumpI", NULL, label_end, NULL);
+        
+        code_t *code_nop = generate_code("nop", NULL, NULL, NULL);
+        code_nop->instruction.label = label_end;
+
+        code_t *code_true = $5 == NULL ? generate_code("nop", NULL, NULL, NULL) : $5->code;
+        code_true->instruction.label = label_true;
+
+        code_t *code_false = $6 == NULL ? generate_code("nop", NULL, NULL, NULL) : $6->code;
+        code_false->instruction.label = label_false;
+
+
+        $$->code = concatenate_multiple_codes(
+            $3->code,
+            code_cbr,
+            code_true,
+            code_jump,
+            code_false,
+            code_nop,
+            NULL
+        );
     };
 
 
@@ -406,6 +463,31 @@ while:
         if($5) {
             asd_add_child($$, $5);
         }
+
+        char *label_true = generate_label();
+        char *label_false = generate_label();
+        char *label_back = generate_label();
+
+        $3->code->instruction.label = label_back;
+
+        code_t *code_cbr = generate_code("cbr", $3->location, label_true, label_false);
+    
+        code_t *code_jump = generate_code("jumpI", NULL, label_back, NULL);
+
+        code_t *code_true = $5 == NULL ? generate_code("nop", NULL, NULL, NULL) : $5->code;
+        code_true->instruction.label = label_true;
+
+        code_t *code_false = generate_code("nop", NULL, NULL, NULL);
+        code_false->instruction.label = label_false;
+
+        $$->code = concatenate_multiple_codes(
+            $3->code,
+            code_cbr,
+            code_true,
+            code_jump,
+            code_false,
+            NULL
+        );
     };
 
 expression: 
@@ -416,6 +498,7 @@ n7:
         $$ = asd_new("|"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("or", $$, $1, $3); 
         } else {
             err_wrong_type($$->label, get_line_number());
         }
@@ -427,6 +510,7 @@ n6:
         $$ = asd_new("&"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("and", $$, $1, $3);
         } else {
             err_wrong_type($$->label, get_line_number());
         }
@@ -438,6 +522,7 @@ n5:
         $$ = asd_new("=="); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("cmp_EQ", $$, $1, $3); 
         } else {
             err_wrong_type($$->label, get_line_number());
         }
@@ -446,6 +531,7 @@ n5:
         $$ = asd_new("!="); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("cmp_NE", $$, $1, $3);
         } else {
             err_wrong_type($$->label, get_line_number());
         }
@@ -457,6 +543,7 @@ n4:
         $$ = asd_new("<"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("cmp_LT", $$, $1, $3); 
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -465,6 +552,7 @@ n4:
         $$ = asd_new(">"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("cmp_GT", $$, $1, $3);
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -473,6 +561,7 @@ n4:
         $$ = asd_new("<="); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("cmp_LE", $$, $1, $3);
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -481,6 +570,7 @@ n4:
         $$ = asd_new(">="); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("cmp_GE", $$, $1, $3);
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -492,6 +582,7 @@ n3:
         $$ = asd_new("+"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("add", $$, $1, $3);
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -500,6 +591,7 @@ n3:
         $$ = asd_new("-"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("sub", $$, $1, $3);
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -511,6 +603,7 @@ n2:
         $$ = asd_new("*"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("mult", $$, $1, $3);
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -519,6 +612,7 @@ n2:
         $$ = asd_new("/"); asd_add_child($$, $1);  asd_add_child($$, $3);
         if ($1->type == $3->type) {
             $$->type = $1->type;
+            generate_code_binary_operation("div", $$, $1, $3);
         } else {
             err_wrong_type($1->label, get_line_number());
         }
@@ -534,9 +628,32 @@ n2:
     n1 { $$ = $1; };
 
 n1:
-    '+' n1 { $$ = asd_new("+"); asd_add_child($$, $2); $$->type = $2->type; } |
-    '-' n1 { $$ = asd_new("-"); asd_add_child($$, $2); $$->type = $2->type; } |
-    '!' n1 { $$ = asd_new("!"); asd_add_child($$, $2); $$->type = $2->type; } |
+    '+' n1 {
+            $$ = asd_new("+");
+            asd_add_child($$, $2);
+            $$->type = $2->type;  
+            $$->location = generate_temporary();
+            $$->code = concatenate_code($2->code, generate_code("addI", $2->location, "0", $$->location)); } |
+    '-' n1 { 
+            $$ = asd_new("-");
+            asd_add_child($$, $2);
+            $$->type = $2->type;
+            $$->location = generate_temporary();
+            $$->code = concatenate_code($2->code, generate_code("rsubI", $2->location, "0", $$->location)); } |
+    '!' n1 { 
+            $$ = asd_new("!"); 
+            asd_add_child($$, $2);
+            $$->type = $2->type;
+
+            $$->location = generate_temporary();
+            char *temp0 = generate_temporary();
+
+            $$->code = concatenate_multiple_codes(
+                $2->code,
+                generate_code("loadI", "0", NULL, temp0),
+                generate_code("cmp_EQ", $2->location, temp0, $$->location),
+                NULL
+            ); } |
     n0 { $$ = $1; };
 
 n0: 
@@ -553,10 +670,21 @@ n0:
 
         $$ = asd_new_ownership($1->lexem);
         $$->type = get_entry($1->lexem)->type;
+        char buf[CODE_OFFSET_SIZE];
+        snprintf(buf, sizeof(buf), "%d", (int)get_entry($1->lexem)->offset);
+        $$->location = generate_temporary();
+        $$->code = generate_code("loadAI", get_entry($1->lexem)->is_global ? "rbss": "rfp", arena_strdup(allocator, buf), $$->location);
+
         free($1);
     } |
     TK_LI_FLOAT { $$ = asd_new_ownership($1->lexem); free($1); $$->type = TFloat; } |
-    TK_LI_INT { $$ = asd_new_ownership($1->lexem); free($1); $$->type = TInt; } |
+    TK_LI_INT {
+        $$ = asd_new_ownership($1->lexem);
+        $$->type = TInt;
+        $$->location = generate_temporary();
+        $$->code = generate_code("loadI", $$->label, NULL, $$->location);
+        free($1);
+    } |
     '(' expression ')' { if($2) {$$ = $2;}; };
 %%
 

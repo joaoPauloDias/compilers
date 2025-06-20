@@ -1,0 +1,11 @@
+and_test returns int is [
+    declare foo as int with 1
+    declare bar as int with 2
+
+    if(foo == 1 & bar == 2) [
+        foo is -1
+    ] else [
+        foo is 2
+    ]
+    return foo as int
+];

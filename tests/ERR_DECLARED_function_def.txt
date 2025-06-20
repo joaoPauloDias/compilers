@@ -1,4 +1,0 @@
-declare foo as int,
-foo returns float float is [
-    return 69.0 as float
-];
