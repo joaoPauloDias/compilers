@@ -35,8 +35,10 @@ lex.yy.c: scanner.l parser.tab.c
 
 test: all $(TEST_FILES)
 	@for file in $(TEST_FILES); do \
-		echo -n "$$file:\n"; \
+		echo -n "$$file"; \
 		./$(TARGET) < $$file \
+		./$(TARGET) < $$file > tests/$$(basename $$file .txt).iloc; \
+		python3 $(SIMULATOR) -s -m tests/$$(basename $$file .txt).iloc > tests/$$(basename $$file .txt).stats; \
 		echo ""; \
 	done
 
@@ -56,5 +58,6 @@ coverage: all $(TEST_FILES)
 clean:
 	rm -f $(TARGET) $(OBJS) $(LEX_OUTPUT) $(PARSER_OUTPUT); \
 	rm -f *.gv *.info *.gcno *.dot
+	rm -f tests/*.iloc tests/*.stats
 	lcov --directory . --zerocounters
 	rm -rf coverage_report
