@@ -113,11 +113,11 @@ code_t *concatenate_multiple_codes(code_t *first, ...)
     return first;
 }
 
-void print_code(const code_t *code)
+char *code_to_string(const code_t *code)
 {
     if (code == NULL)
     {
-        return;
+        return arena_strdup(allocator, "");
     }
 
     const iloc_t *inst = &code->instruction;
@@ -127,26 +127,32 @@ void print_code(const code_t *code)
     const char *arg2 = inst->arg2 ? inst->arg2 : "";
     const char *arg3 = inst->arg3 ? inst->arg3 : "";
 
+    char line[256];
     if (strcmp(inst->mnemonic, "cbr") == 0 || strcmp(inst->mnemonic, "jumpI") == 0)
     {
-        printf("%2s%1s %-8s %3s -> %3s%1s %3s\n", label, colon, inst->mnemonic, arg1, arg2, inst->arg3 ? "," : "",
-               arg3);
+        snprintf(line, sizeof(line), "%2s%1s %-8s %3s -> %3s%1s %3s\n", label, colon, inst->mnemonic, arg1, arg2,
+                 inst->arg3 ? "," : "", arg3);
     }
     else if (strcmp(inst->mnemonic, "storeAI") == 0)
     {
-        printf("%2s%1s %-8s %3s => %3s%1s %3s\n", label, colon, inst->mnemonic, arg1, arg2, inst->arg2 ? "," : "",
-               arg3);
+        snprintf(line, sizeof(line), "%2s%1s %-8s %3s => %3s%1s %3s\n", label, colon, inst->mnemonic, arg1, arg2,
+                 inst->arg2 ? "," : "", arg3);
     }
     else if (strcmp(inst->mnemonic, "nop") == 0)
     {
-        printf("%2s%1s %-8s\n", label, colon, inst->mnemonic);
+        snprintf(line, sizeof(line), "%2s%1s %-8s\n", label, colon, inst->mnemonic);
     }
     else
     {
         const char *arrow = (strncmp(inst->mnemonic, "cmp", 3) != 0) ? "=>" : "->";
-        printf("%2s%1s %-8s %3s%1s %3s %s %3s\n", label, colon, inst->mnemonic, arg1, inst->arg2 ? "," : "", arg2,
-               arrow, arg3);
+        snprintf(line, sizeof(line), "%2s%1s %-8s %3s%1s %3s %s %3s\n", label, colon, inst->mnemonic, arg1,
+                 inst->arg2 ? "," : "", arg2, arrow, arg3);
     }
 
-    print_code(code->next);
+    char *rest = code_to_string(code->next);
+    size_t total_len = strlen(line) + strlen(rest) + 1;
+    char *result = arena_alloc(allocator, total_len);
+    snprintf(result, total_len, "%s%s", line, rest);
+
+    return result;
 }

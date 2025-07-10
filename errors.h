@@ -15,11 +15,11 @@ void err_undeclared(const char *symbol, uint32_t line);
 
 void err_declared(const char *symbol, uint32_t line);
 
-void err_variable(const char* symbol, uint32_t line);
+void err_variable(const char *symbol, uint32_t line);
 
-void err_function(const char* symbol, uint32_t line);
+void err_function(const char *symbol, uint32_t line);
 
-void err_wrong_type(const char* symbol, uint32_t line);
+void err_wrong_type(const char *symbol, uint32_t line);
 
 void err_missing_args();
 

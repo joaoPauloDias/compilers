@@ -7,5 +7,6 @@ and_test returns int is [
     ] else [
         foo is 2
     ]
+
     return foo as int
 ];
