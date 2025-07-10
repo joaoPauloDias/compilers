@@ -1,6 +1,7 @@
 #include "asm.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,19 +17,19 @@ static const char *register_map[REGISTER_LIMIT] = {"%ebx",  "%ecx",  "%edx",  "%
 typedef struct
 {
     char name[64];
-    int offset;
+    int32_t offset;
     bool used;
 } global_var_t;
 
 typedef struct
 {
-    int num_temps;
-    int first_use[MAX_TEMPS];
-    int last_use[MAX_TEMPS];
-    int interference_graph[MAX_TEMPS][MAX_TEMPS];
-    int color[MAX_TEMPS];
+    size_t num_temps;
+    size_t num_globals;
+    int32_t first_use[MAX_TEMPS];
+    int32_t last_use[MAX_TEMPS];
+    int32_t interference_graph[MAX_TEMPS][MAX_TEMPS];
+    int32_t color[MAX_TEMPS];
     global_var_t globals[MAX_GLOBALS];
-    int num_globals;
 } register_allocator_t;
 
 static register_allocator_t allocator;
@@ -46,17 +47,17 @@ static void init_allocator(void)
 
 static bool is_temporary_register(const char *temp)
 {
-    return temp != NULL && temp[0] == 'r' && strcmp(temp, "rfp") && strcmp(temp, "rbss");
+    return temp != NULL && temp[0] == 'r' && strcmp(temp, "rfp") != 0 && strcmp(temp, "rbss") != 0;
 }
 
 static bool is_global_reference(const char *operand)
 {
-    return operand != NULL && !strcmp(operand, "rbss");
+    return operand != NULL && strcmp(operand, "rbss") == 0;
 }
 
 static void add_global_variable(int offset)
 {
-    for (int i = 0; i < allocator.num_globals; i++)
+    for (size_t i = 0; i < allocator.num_globals; i++)
     {
         if (allocator.globals[i].offset == offset)
         {
@@ -71,7 +72,7 @@ static void add_global_variable(int offset)
         exit(1);
     }
 
-    snprintf(allocator.globals[allocator.num_globals].name, 64, "global_%d", offset);
+    snprintf(allocator.globals[allocator.num_globals].name, 64, "global_%" PRId32, offset);
     allocator.globals[allocator.num_globals].offset = offset;
     allocator.globals[allocator.num_globals].used = true;
     allocator.num_globals++;
@@ -117,7 +118,7 @@ static void build_lifetime_table(code_t *code)
 
     while (current != NULL)
     {
-        struct iloc_t inst = current->instruction;
+        iloc_t inst = current->instruction;
 
         mark_as_temporary_use(inst.arg1, line);
         mark_as_temporary_use(inst.arg2, line);
@@ -151,12 +152,14 @@ static bool temporaries_interfere(int temp1, int temp2)
             allocator.first_use[temp1] <= allocator.last_use[temp2]);
 }
 
-static void build_interference_graph(void)
+static void build_interference_graph()
 {
     for (int temp1 = 0; temp1 < MAX_TEMPS; temp1++)
     {
         if (allocator.first_use[temp1] == -1)
+        {
             continue;
+        }
 
         for (int temp2 = temp1 + 1; temp2 < MAX_TEMPS; temp2++)
         {
@@ -369,7 +372,7 @@ static void translate_load_ai(struct iloc_t inst)
     }
 }
 
-static void translate_store_ai(struct iloc_t inst)
+static void translate_store_ai(iloc_t inst)
 {
     if (is_global_reference(inst.arg2))
     {
@@ -384,13 +387,13 @@ static void translate_store_ai(struct iloc_t inst)
     }
 }
 
-static void translate_arithmetic(struct iloc_t inst, const char *op)
+static void translate_arithmetic(iloc_t inst, const char *op)
 {
     printf("\tmovl\t%s, %s\n", retrieve_register(inst.arg1), retrieve_register(inst.arg3));
     printf("\t%s\t%s, %s\n", op, retrieve_register(inst.arg2), retrieve_register(inst.arg3));
 }
 
-static void translate_division(struct iloc_t inst)
+static void translate_division(iloc_t inst)
 {
     printf("\tmovl\t%s, %%eax\n", retrieve_register(inst.arg1));
     printf("\tcltd\n");
@@ -398,13 +401,13 @@ static void translate_division(struct iloc_t inst)
     printf("\tmovl\t%%eax, %s\n", retrieve_register(inst.arg3));
 }
 
-static void translate_reverse_subtract_immediate(struct iloc_t inst)
+static void translate_reverse_subtract_immediate(iloc_t inst)
 {
     printf("\tmovl\t$%s, %s\n", inst.arg2, retrieve_register(inst.arg3));
     printf("\tsubl\t%s, %s\n", retrieve_register(inst.arg1), retrieve_register(inst.arg3));
 }
 
-static void translate_comparison(struct iloc_t inst, const char *set_op)
+static void translate_comparison(iloc_t inst, const char *set_op)
 {
     printf("\tcmpl\t%s, %s\n", retrieve_register(inst.arg2), retrieve_register(inst.arg1));
     printf("\t%s\t%%al\n", set_op);
@@ -412,7 +415,7 @@ static void translate_comparison(struct iloc_t inst, const char *set_op)
     printf("\tmovl\t%%eax, %s\n", retrieve_register(inst.arg3));
 }
 
-static void translate_logical_and(struct iloc_t inst)
+static void translate_logical_and(iloc_t inst)
 {
     printf("\tmovl\t%s, %s\n", retrieve_register(inst.arg1), retrieve_register(inst.arg3));
     printf("\timull\t%s, %s\n", retrieve_register(inst.arg2), retrieve_register(inst.arg3));
@@ -422,7 +425,7 @@ static void translate_logical_and(struct iloc_t inst)
     printf("\tmovl\t%%eax, %s\n", retrieve_register(inst.arg3));
 }
 
-static void translate_logical_or(struct iloc_t inst)
+static void translate_logical_or(iloc_t inst)
 {
     printf("\tmovl\t%s, %s\n", retrieve_register(inst.arg1), retrieve_register(inst.arg3));
     printf("\tor\t%s, %s\n", retrieve_register(inst.arg2), retrieve_register(inst.arg3));
@@ -432,19 +435,19 @@ static void translate_logical_or(struct iloc_t inst)
     printf("\tmovl\t%%eax, %s\n", retrieve_register(inst.arg3));
 }
 
-static void translate_conditional_branch(struct iloc_t inst)
+static void translate_conditional_branch(iloc_t inst)
 {
     printf("\ttest\t%s, %s\n", retrieve_register(inst.arg1), retrieve_register(inst.arg1));
     printf("\tjne\t%s\n", inst.arg2);
     printf("\tjmp\t%s\n", inst.arg3);
 }
 
-static void translate_jump_immediate(struct iloc_t inst)
+static void translate_jump_immediate(iloc_t inst)
 {
     printf("\tjmp\t%s\n", inst.arg2);
 }
 
-static void translate_instruction(struct iloc_t instruction)
+static void translate_instruction(iloc_t instruction)
 {
     if (instruction.label != NULL)
     {
