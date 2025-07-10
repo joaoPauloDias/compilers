@@ -26,4 +26,4 @@ char *generate_temporary();
 void generate_code_binary_operation(char *mnemonic, AsdTree *root, struct AsdTree *left, struct AsdTree *right);
 code_t *concatenate_code(code_t *first, code_t *second);
 code_t *concatenate_multiple_codes(code_t *first, ...);
-void print_code(const code_t *code);
+char *code_to_string(const code_t *code);

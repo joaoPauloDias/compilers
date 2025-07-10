@@ -390,8 +390,9 @@ return:
         }
 
         $$ = asd_new("return");
-        $$->code = $2->code;
         asd_add_child($$, $2);
+        $$->code = concatenate_multiple_codes($2->code, generate_code("ret", $2->location, NULL, NULL), NULL);
+
     }
 
 conditional:
