@@ -4,6 +4,7 @@
 #include "asd.h"
 #include "symbol_table.h"
 
+#include "asm.h"
 #include "code_utils.h"
 #include "parser.tab.h"
 
@@ -24,8 +25,8 @@ int main(int argc, char **argv)
     table = (SymbolTable){.capacity = 128, .items = arena_alloc(allocator, sizeof(SymbolEntry) * 128)};
 
     int ret = yyparse();
+    generate_asm(arvore->code, code_to_string(arvore->code));
 
-    print_code(arvore->code);
     asd_free(arvore);
     yylex_destroy();
 

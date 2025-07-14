@@ -44,6 +44,8 @@ etapa*
 *.pdb
 *.iloc
 *.stats
+*.s
+program_*
 
 # Flex generated files
 *.yy.c
